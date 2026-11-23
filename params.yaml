@@ -1,0 +1,56 @@
+# =============================================================================
+# params.yaml - ÚNICA fuente de verdad del modelo que se entrena (GitOps)
+# =============================================================================
+# Cambiar el modelo = cambiar este archivo en una rama + Pull Request. El pipeline de CI vuelve a
+# entrenar con estos parámetros, aplica el quality gate y verifica que los artefactos de modelo/
+# que vienen en el PR son exactamente los que produce este archivo con estos datos.
+
+modelo:
+  nombre: wodpredict-sobrecarga          # nombre en el Model Registry de MLflow (igual que la Etapa 5)
+  version: "1.0.0"                       # versión semántica: MAYOR.MENOR.PARCHE
+  descripcion: "Regresión logística (C = 0.1) en un Pipeline de scikit-learn"
+  C: 0.1
+  max_iter: 3000
+  semilla: 42
+  umbral: 0.17                           # Etapa 3: el más alto con recall >= 0.70 (fuera del fold, solo entrenamiento)
+  umbral_por_nivel: false                # true = un umbral por nivel calculado fuera de pliegue (mitigación B, Etapa 6)
+  recall_objetivo_por_nivel: 0.732       # recall global del v1.0.0; solo se usa si umbral_por_nivel = true
+
+variables:
+  numericas:
+    - age
+    - days_since_prev_session
+    - sessions_last_3d
+    - sessions_last_7d
+    - sessions_last_28d
+    - load_last_3d
+    - load_last_7d
+    - mean_session_load_28d
+    - acwr3_freq
+    - acwr3_load
+    - acwr_freq
+    - acwr_load
+    - days_since_first_session
+    - prev_rpe
+    - prev_session_load
+    - prev_has_note
+    - prob_fatiga_prev_session
+    - prob_fatiga_last_note
+    - days_since_last_note
+    - notes_last_28d
+  categoricas:
+    - level
+    - sex
+    - language
+  etiqueta: overreaching_label
+  grupo: athlete_id                      # la separación y la validación cruzada son POR ATLETA (sin fuga)
+
+datos:
+  descripcion: "rick-lastra/wodpredict-synth@v1.0 (limpio: etapa-2@v1.0)"
+  url: "https://raw.githubusercontent.com/rick-lastra/WODPredict-AI_etapa-2_preparacion-datos/v1.0/datos/datos_limp/sesiones_limpias.csv"
+  sha256: "4256b41dc5675e8d247541103f2059bc7f4ec6fbff9f455e6dd14f7d16016fe4"
+  archivo_local: datos/sesiones_limpias.csv
+  proporcion_prueba: 0.2
+
+validacion_cruzada:
+  folds: 5                               # GroupKFold por atleta sobre el conjunto de entrenamiento

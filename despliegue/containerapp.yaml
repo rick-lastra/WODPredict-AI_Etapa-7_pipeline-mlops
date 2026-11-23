@@ -1,0 +1,58 @@
+# =============================================================================
+# containerapp.yaml - ESTADO DESEADO de la API en Azure Container Apps (GitOps)
+# =============================================================================
+# Este archivo es la configuración declarativa del despliegue: tamaño de réplica, escalado, sondas y
+# variables. Nadie cambia producción desde el portal: se cambia este archivo en un PR y, al fusionar
+# en main, el workflow CD lo aplica con `az containerapp update --yaml`.
+# ${IMAGEN} y ${GIT_COMMIT} los sustituye el CD (envsubst) con la imagen recién publicada.
+# Valores: política de escalado medida en la Etapa 6 (politicas/autoscaling.yaml de ese repo).
+properties:
+  configuration:
+    activeRevisionsMode: Single
+    ingress:
+      external: true
+      targetPort: 8000
+      transport: auto
+      allowInsecure: false
+  template:
+    revisionSuffix: ""
+    containers:
+      - name: wodpredict-api
+        image: ${IMAGEN}
+        env:
+          - name: GIT_COMMIT
+            value: "${GIT_COMMIT}"
+          - name: PORT
+            value: "8000"
+        resources:
+          cpu: 0.25          # right-sizing de la Etapa 6: p99 65 ms con 4 clientes en 0.25 vCPU
+          memory: 0.5Gi      # en reposo usa ≈ 53 MiB con la imagen ONNX
+        probes:
+          - type: Liveness
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          - type: Readiness
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+    scale:
+      minReplicas: 0         # de noche escala a 0 y no cobra
+      maxReplicas: 5         # tope de gasto (≈ 385 consultas/s, ≈ 4,800 veces la carga del piloto)
+      rules:
+        - name: http-concurrencia
+          http:
+            metadata:
+              concurrentRequests: "4"      # con 16 clientes una réplica de 0.25 vCPU ya no cumple el SLO
+        - name: horario-boxes
+          custom:
+            type: cron
+            metadata:
+              timezone: America/Mexico_City
+              start: "45 4 * * *"          # 15 min antes de la primera clase
+              end: "15 21 * * *"           # 15 min después de la última clase
+              desiredReplicas: "1"         # sin arranque en frío para el coach en horario

@@ -1,0 +1,51 @@
+# =============================================================================
+# validacion_datos.yaml - Pruebas automatizadas de DATOS (contrato del dataset)
+# =============================================================================
+# Lo aplica pipeline/validacion_datos.py antes de entrenar. Los rangos son los mismos que valida la
+# API (Pydantic) para que el modelo nunca se entrene con valores que la API rechazaría.
+
+minimos:
+  filas: 50000
+  atletas: 200
+
+prevalencia_etiqueta: [0.08, 0.20]       # proporción de sesiones con sobrecarga al día siguiente
+max_duplicados: 0                        # filas repetidas (athlete_id + date)
+max_nulos_columna: 0.65                  # proporción máxima de vacíos por variable (prob_fatiga_prev_session ≈ 0.60: no todas las sesiones tienen nota)
+sin_nulos: [athlete_id, date, overreaching_label, level, sex, language, days_since_prev_session,
+            sessions_last_3d, sessions_last_7d, sessions_last_28d, load_last_3d, load_last_7d,
+            prev_session_load, prev_has_note, notes_last_28d, days_since_first_session]
+
+categorias:
+  level: [novato, intermedio, élite]
+  sex: [F, M]
+  language: [es, en]
+
+rangos:
+  age: [16, 80]
+  days_since_first_session: [0, 3650]
+  days_since_prev_session: [1, 365]
+  sessions_last_3d: [0, 3]
+  sessions_last_7d: [0, 7]
+  sessions_last_28d: [0, 28]
+  load_last_3d: [0, 10000]
+  load_last_7d: [0, 20000]
+  mean_session_load_28d: [0, 5000]
+  acwr3_freq: [0, 4]
+  acwr3_load: [0, 4]
+  acwr_freq: [0, 4]
+  acwr_load: [0, 4]
+  prev_rpe: [1, 10]
+  prev_session_load: [0, 5000]
+  prev_has_note: [0, 1]
+  prob_fatiga_prev_session: [0, 1]
+  prob_fatiga_last_note: [0, 1]
+  days_since_last_note: [0, 3650]
+  notes_last_28d: [0, 60]
+
+# Columnas que NO pueden ser variables del modelo porque se conocen DESPUÉS de la sesión (fuga).
+columnas_prohibidas_como_variable: [rpe, session_load, overreaching_label, injury, note_text]
+
+drift:                                   # PSI contra el perfil de referencia (config/perfil_referencia.json)
+  psi_advertencia: 0.10
+  psi_max: 0.25                          # mismo criterio que la Etapa 5
+  bloqueante: true

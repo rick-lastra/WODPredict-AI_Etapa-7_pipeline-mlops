@@ -1,0 +1,84 @@
+{
+  "nombre": "WODPredict-AI - sobrecarga al día siguiente",
+  "version": "1.0.0",
+  "fecha_entrenamiento": "2026-11-23",
+  "algoritmo": "Regresión logística (C = 0.1) en un Pipeline de scikit-learn",
+  "umbral": 0.17,
+  "umbrales_por_nivel": null,
+  "dataset": "rick-lastra/wodpredict-synth@v1.0 (limpio: etapa-2@v1.0)",
+  "dataset_sha256": "4256b41dc5675e8d247541103f2059bc7f4ec6fbff9f455e6dd14f7d16016fe4",
+  "sesiones_entrenamiento": 65403,
+  "sesiones_prueba": 16498,
+  "variables_numericas": [
+    "age",
+    "days_since_prev_session",
+    "sessions_last_3d",
+    "sessions_last_7d",
+    "sessions_last_28d",
+    "load_last_3d",
+    "load_last_7d",
+    "mean_session_load_28d",
+    "acwr3_freq",
+    "acwr3_load",
+    "acwr_freq",
+    "acwr_load",
+    "days_since_first_session",
+    "prev_rpe",
+    "prev_session_load",
+    "prev_has_note",
+    "prob_fatiga_prev_session",
+    "prob_fatiga_last_note",
+    "days_since_last_note",
+    "notes_last_28d"
+  ],
+  "variables_categoricas": [
+    "level",
+    "sex",
+    "language"
+  ],
+  "metricas_prueba": {
+    "exactitud": 0.8147,
+    "precision": 0.3778,
+    "recall": 0.7324,
+    "f1": 0.4984,
+    "roc_auc": 0.8593,
+    "tasa_alertas": 0.2437
+  },
+  "validacion_cruzada": {
+    "recall": {
+      "media": 0.7136,
+      "desviacion": 0.025
+    },
+    "precision": {
+      "media": 0.3801,
+      "desviacion": 0.0242
+    },
+    "roc_auc": {
+      "media": 0.8524,
+      "desviacion": 0.004
+    }
+  },
+  "recall_por_grupo": {
+    "level=intermedio": 0.735,
+    "level=novato": 0.7987,
+    "level=élite": 0.623,
+    "sex=F": 0.7377,
+    "sex=M": 0.7248,
+    "language=en": 0.7303,
+    "language=es": 0.7335
+  },
+  "quality_gate": "aprobado",
+  "artefactos_sha256": {
+    "model.pkl": "9cc8a54400b6254dae30cf8bd328cdb272e5172f37f26699d6045683ea57f518",
+    "model.onnx": "c9f77d60dbcf64dc9a7d7f80e6f15d11fb9cd53d1aebb944e5a4c741538ddfe3"
+  },
+  "git_commit_entrenamiento": "sin-commit",
+  "entorno": {
+    "python": "3.11.16",
+    "sistema": "Windows-10-10.0.26300-SP0",
+    "numpy": "2.0.2",
+    "pandas": "2.2.2",
+    "scikit-learn": "1.6.1",
+    "fecha_utc": "2026-11-23T16:37:46+00:00"
+  }
+}

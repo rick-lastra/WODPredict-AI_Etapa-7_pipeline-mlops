@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.ven/
+ven/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.DS_Store
+# Datos: se descargan del tag v1.0 de la Etapa 2 y se verifican por SHA-256 (params.yaml)
+datos/
+# Salidas de cada corrida (en CI se suben como artefactos de GitHub Actions)
+artefactos/
+reportes/
+mlruns/
+mlflow.db
+*.log

@@ -1,0 +1,141 @@
+# =============================================================================
+# CD · Despliegue continuo GitOps: lo que está en main es lo que corre en Azure
+# =============================================================================
+# Cuando el CI de main pasa y el commit cambió el modelo (modelo/), de la API (servicio/, Dockerfile) o de la
+# configuración declarativa (despliegue/), este workflow:
+#   1. Construye la imagen y la publica en GitHub Container Registry con tres etiquetas:
+#      commit (inmutable), versión del modelo y latest.
+#   2. Aplica despliegue/containerapp.yaml en Azure Container Apps con la imagen nueva.
+#   3. Corre la prueba de humo contra la URL pública. Si falla, hace ROLLBACK a la imagen anterior.
+# Requisitos (una sola vez, ver docs/despliegue_azure.md): secreto AZURE_CREDENTIALS y variables
+# AZURE_RESOURCE_GROUP, AZURE_CONTAINERAPP. Sin el secreto, solo publica la imagen.
+name: CD
+
+# Solo arranca cuando el CI de main terminó en verde: nada que no haya pasado las pruebas y el
+# quality gate llega a producción.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: cd-produccion
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  cambios:
+    name: 0 · ¿Cambió algo desplegable?
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    outputs:
+      desplegar: ${{ steps.revisar.outputs.desplegar }}
+      sha: ${{ steps.revisar.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 2
+      - id: revisar
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          if ! git rev-parse HEAD~1 >/dev/null 2>&1; then echo "desplegar=true" >> "$GITHUB_OUTPUT"; exit 0; fi   # primer commit
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then echo "desplegar=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          CAMBIOS=$(git diff --name-only HEAD~1 HEAD | grep -E '^(modelo/|servicio/|Dockerfile|despliegue/|\.github/workflows/cd\.yml)' || true)
+          echo "Archivos desplegables cambiados: ${CAMBIOS:-ninguno}"
+          if [ -n "$CAMBIOS" ]; then echo "desplegar=true" >> "$GITHUB_OUTPUT"; else echo "desplegar=false" >> "$GITHUB_OUTPUT"; fi
+
+  publicar:
+    name: 1 · Publicar imagen en GHCR
+    runs-on: ubuntu-latest
+    needs: cambios
+    if: needs.cambios.outputs.desplegar == 'true'
+    env:
+      SHA: ${{ needs.cambios.outputs.sha }}
+    outputs:
+      imagen: ${{ steps.datos.outputs.imagen }}
+      version: ${{ steps.datos.outputs.version }}
+      hay_azure: ${{ steps.datos.outputs.hay_azure }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+      - name: Datos de la versión
+        id: datos
+        run: |
+          VERSION=$(python3 -c "import json; print(json.load(open('modelo/metadata.json'))['version'])")
+          REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "repo=$REPO" >> "$GITHUB_OUTPUT"
+          echo "imagen=ghcr.io/$REPO:sha-${SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "hay_azure=${{ secrets.AZURE_CREDENTIALS != '' }}" >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: |
+            GIT_COMMIT=${{ env.SHA }}
+            MODEL_VERSION=${{ steps.datos.outputs.version }}
+          tags: |
+            ${{ steps.datos.outputs.imagen }}
+            ghcr.io/${{ steps.datos.outputs.repo }}:v${{ steps.datos.outputs.version }}
+            ghcr.io/${{ steps.datos.outputs.repo }}:latest
+      - name: Resumen
+        run: |
+          echo "## Imagen publicada" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${{ steps.datos.outputs.imagen }}\` (modelo v${{ steps.datos.outputs.version }})" >> "$GITHUB_STEP_SUMMARY"
+
+  desplegar:
+    name: 2 · Desplegar en Azure Container Apps
+    runs-on: ubuntu-latest
+    needs: [cambios, publicar]
+    if: needs.publicar.outputs.hay_azure == 'true'
+    environment:
+      name: produccion
+      url: ${{ steps.desplegar.outputs.url }}
+    env:
+      RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+      APP: ${{ vars.AZURE_CONTAINERAPP }}
+      IMAGEN: ${{ needs.publicar.outputs.imagen }}
+      VERSION: ${{ needs.publicar.outputs.version }}
+      SHA: ${{ needs.cambios.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Guardar la imagen actual (destino del rollback)
+        id: previa
+        run: |
+          PREVIA=$(az containerapp show -n "$APP" -g "$RG" --query "properties.template.containers[0].image" -o tsv)
+          echo "imagen=$PREVIA" >> "$GITHUB_OUTPUT"
+          echo "Imagen en producción antes del despliegue: $PREVIA"
+      - name: Aplicar la configuración declarativa (despliegue/containerapp.yaml)
+        id: desplegar
+        run: |
+          export IMAGEN GIT_COMMIT="$SHA"
+          envsubst < despliegue/containerapp.yaml > /tmp/containerapp.yaml
+          az containerapp update -n "$APP" -g "$RG" --yaml /tmp/containerapp.yaml -o none
+          URL="https://$(az containerapp show -n "$APP" -g "$RG" --query properties.configuration.ingress.fqdn -o tsv)"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+      - name: Prueba de humo en producción
+        id: humo
+        run: python3 scripts/smoke_test.py "${{ steps.desplegar.outputs.url }}" --version-esperada "$VERSION" --repeticiones 20
+      - name: Rollback automático si la prueba de humo falla
+        if: failure() && steps.previa.outputs.imagen != ''
+        run: |
+          echo "::error::La prueba de humo falló. Rollback a ${{ steps.previa.outputs.imagen }}"
+          az containerapp update -n "$APP" -g "$RG" --image "${{ steps.previa.outputs.imagen }}" -o none
+          echo "## ⚠️ Rollback a \`${{ steps.previa.outputs.imagen }}\`" >> "$GITHUB_STEP_SUMMARY"

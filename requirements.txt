@@ -1,0 +1,24 @@
+# Ambiente del PIPELINE (datos, entrenamiento, quality gate, ONNX, MLflow) y de las pruebas.
+# Python 3.12. Las versiones de numpy/pandas/scikit-learn/joblib son las MISMAS con las que se
+# entrenó el modelo v1.0.0 (Etapa 4): así el pipeline reproduce el modelo versionado.
+numpy==2.0.2
+pandas==2.2.2
+scipy==1.16.3
+scikit-learn==1.6.1
+joblib==1.6.0
+PyYAML==6.0.3
+# Exportación e inferencia optimizada (Etapa 6)
+onnx==1.23.2
+skl2onnx==1.20.0
+onnxruntime==1.32.0
+# Seguimiento de experimentos y Model Registry con alias (Etapa 5)
+mlflow==3.4.0
+sqlalchemy==2.0.44
+# API (para las pruebas del contrato con TestClient)
+fastapi==0.162.0
+pydantic==2.14.2
+uvicorn==0.54.0
+httpx==0.28.1
+# Calidad de código y pruebas
+pytest==9.2.0
+ruff==0.14.5

@@ -1,0 +1,18 @@
+[project]
+name = "wodpredict-ai-etapa7"
+version = "1.0.0"
+description = "Pipeline MLOps/GitOps de WODPredict-AI (Fase III)"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 125
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["datos: requiere datos/sesiones_limpias.csv (se descarga con python -m pipeline.datos)"]
+filterwarnings = ["ignore::DeprecationWarning", "ignore:Using `httpx`"]

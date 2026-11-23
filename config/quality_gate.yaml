@@ -1,0 +1,32 @@
+# =============================================================================
+# quality_gate.yaml - Compuerta de calidad que decide si un modelo candidato se puede promover
+# =============================================================================
+# Lo aplica pipeline/quality_gate.py en local y en GitHub Actions. Si una regla BLOQUEANTE no se
+# cumple, el pipeline termina con error, el candidato NO se copia a modelo/ y el PR no se puede fusionar.
+
+calidad:                                 # contra el conjunto de prueba (20 % de atletas nunca vistos)
+  recall_minimo: 0.70                    # SLO de calidad de la Etapa 5 (config/monitoreo.yaml)
+  roc_auc_minimo: 0.80
+  bloqueante: true
+
+no_regresion:                            # contra el modelo champion vigente (modelo/metadata.json en main)
+  caida_max_recall: 0.02
+  caida_max_roc_auc: 0.01
+  bloqueante: true
+
+estabilidad:                             # validación cruzada agrupada por atleta (entrenamiento)
+  desviacion_max_recall: 0.05
+  bloqueante: true
+
+onnx:                                    # el modelo ONNX que sirve la API decide igual que scikit-learn
+  max_diferencia_probabilidad: 0.0001
+  decisiones_distintas_max: 0
+  bloqueante: true
+
+fairness:                                # igualdad de oportunidad (auditoría RAI de la Etapa 6)
+  atributos: [level, sex, language]
+  recall_minimo_por_grupo: 0.70
+  brecha_recall_max: 0.10
+  # El v1.0.0 NO cumple en élite (recall 0.62, auditoría de la Etapa 6). Por eso hoy la regla solo
+  # ADVIERTE. Se vuelve bloqueante cuando se promueva el v1.1.0 (sin sexo + umbral por nivel).
+  bloqueante: false

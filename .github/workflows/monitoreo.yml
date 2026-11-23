@@ -1,0 +1,29 @@
+# =============================================================================
+# Monitoreo programado: salud, latencia y desviación entre Git y producción
+# =============================================================================
+# Cada hora en horario de los boxes (05:00 a 21:00, hora del centro de México = 11:00 a 03:00 UTC)
+# consulta la API pública. Falla (y GitHub avisa por correo) si la API no responde, si las
+# predicciones de referencia cambian, si la latencia supera el umbral o si la versión en producción
+# no es la versión que está en main (desviación de configuración, principio GitOps).
+# Requiere la variable de repositorio API_URL. Complementa (no reemplaza) las alertas de Azure Monitor.
+name: Monitoreo
+
+on:
+  schedule:
+    - cron: "0 11-23,0-3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  salud:
+    name: Salud y desviación Git ↔ producción
+    runs-on: ubuntu-latest
+    if: vars.API_URL != ''
+    steps:
+      - uses: actions/checkout@v4
+      - name: Versión esperada (la de main)
+        run: echo "VERSION=$(python3 -c "import json; print(json.load(open('modelo/metadata.json'))['version'])")" >> "$GITHUB_ENV"
+      - name: Prueba de humo y latencia
+        run: python3 scripts/smoke_test.py "${{ vars.API_URL }}" --version-esperada "$VERSION" --repeticiones 30 --p95-max-ms 1500

@@ -1,0 +1,7 @@
+# Solo entra a la imagen lo que necesita la API
+*
+!servicio/requirements.txt
+!servicio/app.py
+!servicio/frontend/
+!modelo/model.onnx
+!modelo/metadata.json
