@@ -60,7 +60,10 @@ La regla de fairness no bloquea todavía porque el modelo en producción (v1.0.0
 
 ## D10. Escalado y tamaño de réplica
 
-- **Decisión:** 0.25 vCPU / 0.5 GiB, de 0 a 5 réplicas, regla HTTP con 4 consultas concurrentes y regla cron con 1 réplica en horario de los boxes. Son los valores medidos en la Etapa 6, ahora aplicados de forma declarativa.
+- **Decisión:** 0.25 vCPU / 0.5 GiB, de 0 a 5 réplicas y regla HTTP con 4 consultas concurrentes por réplica. Son los valores medidos en la Etapa 6, ahora aplicados de forma declarativa desde `despliegue/containerapp.yaml`.
+- **Cambio frente a la Etapa 6 (evidencia del primer despliegue):** la regla cron (1 réplica de 04:45 a 21:15) no se aplica. El entorno de Container Apps se creó como *express* y Azure la rechazó (`ExpressCustomScaleRulesNotSupported`). El CD detectó el error, no cambió nada en producción y ejecutó el rollback.
+- **Consecuencia:** la primera consulta después de un periodo sin tráfico paga un arranque en frío (≈ 10 s medido en la Etapa 6). Según el análisis de costos de la Etapa 6, con una consulta cada 12.5 s la réplica casi nunca llega a 0 en horario y se cobra a tarifa activa, así que esta configuración cuesta más que la configuración D (ver `resultados/costos_escenarios.csv` de la Etapa 6).
+- **Alternativas para producción:** crear el entorno con perfiles de carga (`--enable-workload-profiles`), que sí admite la regla cron, o fijar `minReplicas: 1`. Ambas se cambian en un PR al mismo archivo.
 
 ## D11. Lo que no se automatiza (y por qué)
 

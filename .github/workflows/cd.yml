@@ -133,9 +133,9 @@ jobs:
       - name: Prueba de humo en producción
         id: humo
         run: python3 scripts/smoke_test.py "${{ steps.desplegar.outputs.url }}" --version-esperada "$VERSION" --repeticiones 20
-      - name: Rollback automático si la prueba de humo falla
+      - name: Rollback automático si el despliegue o la prueba de humo fallan
         if: failure() && steps.previa.outputs.imagen != ''
         run: |
-          echo "::error::La prueba de humo falló. Rollback a ${{ steps.previa.outputs.imagen }}"
+          echo "::error::El despliegue o la prueba de humo fallaron. Rollback a ${{ steps.previa.outputs.imagen }}"
           az containerapp update -n "$APP" -g "$RG" --image "${{ steps.previa.outputs.imagen }}" -o none
           echo "## ⚠️ Rollback a \`${{ steps.previa.outputs.imagen }}\`" >> "$GITHUB_STEP_SUMMARY"

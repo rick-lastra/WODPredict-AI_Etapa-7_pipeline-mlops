@@ -48,11 +48,7 @@ properties:
           http:
             metadata:
               concurrentRequests: "4"      # con 16 clientes una réplica de 0.25 vCPU ya no cumple el SLO
-        - name: horario-boxes
-          custom:
-            type: cron
-            metadata:
-              timezone: America/Mexico_City
-              start: "45 4 * * *"          # 15 min antes de la primera clase
-              end: "15 21 * * *"           # 15 min después de la última clase
-              desiredReplicas: "1"         # sin arranque en frío para el coach en horario
+        # La regla cron de la Etapa 6 (1 réplica de 04:45 a 21:15) NO se aplica: el entorno de Container
+        # Apps se creó como "express" y no admite reglas de escalado personalizadas
+        # (ExpressCustomScaleRulesNotSupported, primer despliegue del CD, 2026-11-23). Ver D10 en
+        # docs/decisiones_tecnicas.md.
