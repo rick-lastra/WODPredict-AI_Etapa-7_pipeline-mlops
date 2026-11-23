@@ -4,7 +4,11 @@
   "fecha_entrenamiento": "2026-11-23",
   "algoritmo": "Regresión logística (C = 0.1) en un Pipeline de scikit-learn",
   "umbral": 0.17,
-  "umbrales_por_nivel": null,
+  "umbrales_por_nivel": {
+    "intermedio": 0.17,
+    "novato": 0.17,
+    "élite": 0.1
+  },
   "dataset": "rick-lastra/wodpredict-synth@v1.0 (limpio: etapa-2@v1.0)",
   "dataset_sha256": "4256b41dc5675e8d247541103f2059bc7f4ec6fbff9f455e6dd14f7d16016fe4",
   "sesiones_entrenamiento": 65403,
@@ -33,52 +37,51 @@
   ],
   "variables_categoricas": [
     "level",
-    "sex",
     "language"
   ],
   "metricas_prueba": {
-    "exactitud": 0.8147,
-    "precision": 0.3778,
-    "recall": 0.7324,
-    "f1": 0.4984,
+    "exactitud": 0.7734,
+    "precision": 0.3303,
+    "recall": 0.7816,
+    "f1": 0.4644,
     "roc_auc": 0.8593,
-    "tasa_alertas": 0.2437
+    "tasa_alertas": 0.2974
   },
   "validacion_cruzada": {
     "recall": {
-      "media": 0.7136,
-      "desviacion": 0.025
+      "media": 0.7133,
+      "desviacion": 0.0268
     },
     "precision": {
-      "media": 0.3801,
-      "desviacion": 0.0242
+      "media": 0.3818,
+      "desviacion": 0.0238
     },
     "roc_auc": {
-      "media": 0.8524,
+      "media": 0.8529,
       "desviacion": 0.004
     }
   },
   "recall_por_grupo": {
     "level=intermedio": 0.735,
-    "level=novato": 0.7987,
-    "level=élite": 0.623,
-    "sex=F": 0.7377,
-    "sex=M": 0.7248,
-    "language=en": 0.7303,
-    "language=es": 0.7335
+    "level=novato": 0.7976,
+    "level=élite": 0.8053,
+    "sex=F": 0.7959,
+    "sex=M": 0.7611,
+    "language=en": 0.7538,
+    "language=es": 0.7964
   },
   "quality_gate": "aprobado",
   "artefactos_sha256": {
-    "model.pkl": "9cc8a54400b6254dae30cf8bd328cdb272e5172f37f26699d6045683ea57f518",
-    "model.onnx": "c9f77d60dbcf64dc9a7d7f80e6f15d11fb9cd53d1aebb944e5a4c741538ddfe3"
+    "model.pkl": "e9cb99039987084260ff0c03ce8681d2d794d1ea655ac91feb77ee2b156e6830",
+    "model.onnx": "10a601cd4be29230ea638e0df3786b9b3a5f6dca123a04f9086a216eba1c7e8b"
   },
-  "git_commit_entrenamiento": "sin-commit",
+  "git_commit_entrenamiento": "bd79a0f1397b2e78fd78b80efc932f613ec65b78",
   "entorno": {
     "python": "3.11.16",
     "sistema": "Windows-10-10.0.26300-SP0",
     "numpy": "2.0.2",
     "pandas": "2.2.2",
     "scikit-learn": "1.6.1",
-    "fecha_utc": "2026-11-23T16:37:46+00:00"
+    "fecha_utc": "2026-11-23T20:19:26+00:00"
   }
 }
