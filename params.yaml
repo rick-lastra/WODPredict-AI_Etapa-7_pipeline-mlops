@@ -7,14 +7,12 @@
 
 modelo:
   nombre: wodpredict-sobrecarga          # nombre en el Model Registry de MLflow (igual que la Etapa 5)
-  #version: "1.0.0"                       # versión semántica: MAYOR.MENOR.PARCHE
-  version: "1.0.0"                       # versión semántica: MAYOR.MENOR.PARCHE
+  version: "1.1.0"                       # versión semántica: MAYOR.MENOR.PARCHE
   descripcion: "Regresión logística (C = 0.1) en un Pipeline de scikit-learn"
   C: 0.1
   max_iter: 3000
   semilla: 42
   umbral: 0.17                           # Etapa 3: el más alto con recall >= 0.70 (fuera del fold, solo entrenamiento)
-  #umbral_por_nivel: false                # true = un umbral por nivel calculado fuera de pliegue (mitigación B, Etapa 6)
   umbral_por_nivel: true                  
   recall_objetivo_por_nivel: 0.732       # recall global del v1.0.0; solo se usa si umbral_por_nivel = true
 
@@ -42,7 +40,6 @@ variables:
     - notes_last_28d
   categoricas:
     - level
-    #- sex
     - language
   etiqueta: overreaching_label
   grupo: athlete_id                      # la separación y la validación cruzada son POR ATLETA (sin fuga)

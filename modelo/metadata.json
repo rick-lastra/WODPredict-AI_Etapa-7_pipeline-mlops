@@ -1,6 +1,6 @@
 {
   "nombre": "WODPredict-AI - sobrecarga al día siguiente",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "fecha_entrenamiento": "2026-11-23",
   "algoritmo": "Regresión logística (C = 0.1) en un Pipeline de scikit-learn",
   "umbral": 0.17,
@@ -73,15 +73,15 @@
   "quality_gate": "aprobado",
   "artefactos_sha256": {
     "model.pkl": "e9cb99039987084260ff0c03ce8681d2d794d1ea655ac91feb77ee2b156e6830",
-    "model.onnx": "10a601cd4be29230ea638e0df3786b9b3a5f6dca123a04f9086a216eba1c7e8b"
+    "model.onnx": "8be492a46b68eafb553819c88293858bb720844e8ccf0da7591b12edf7603490"
   },
-  "git_commit_entrenamiento": "bd79a0f1397b2e78fd78b80efc932f613ec65b78",
+  "git_commit_entrenamiento": "0e677b3dcb1ab8d1fe8290afc1364eaa4b7cff1d",
   "entorno": {
     "python": "3.11.16",
     "sistema": "Windows-10-10.0.26300-SP0",
     "numpy": "2.0.2",
     "pandas": "2.2.2",
     "scikit-learn": "1.6.1",
-    "fecha_utc": "2026-11-23T20:19:26+00:00"
+    "fecha_utc": "2026-11-23T20:25:33+00:00"
   }
 }
