@@ -2,6 +2,16 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). El modelo usa versionado semántico.
 
+## [1.1.0] - 2026-11-23
+
+### Cambiado
+- Modelo v1.1.0 (mitigación de fairness aprobada en la auditoría de la Etapa 6): se quita la variable `sex` y se usa umbral por nivel (élite 0.10, resto 0.17).
+- Resultado en prueba: recall 0.782 (antes 0.732), recall élite 0.805 (antes 0.623), brecha por nivel 0.070 (antes 0.176), ROC-AUC 0.859 sin cambio.
+
+### Corregido
+- CD: se quitó la regla de escalado cron, no soportada por el entorno express de Container Apps.
+- Monitoreo: horario movido al minuto 17 para evitar que GitHub omita las corridas del minuto 0.
+
 ## [1.0.0] - 2026-11
 
 ### Agregado
