@@ -10,7 +10,7 @@ name: Monitoreo
 
 on:
   schedule:
-    - cron: "0 11-23,0-3 * * *"
+    - cron: "17 11-23,0-3 * * *"
   workflow_dispatch:
 
 permissions:
